@@ -27,6 +27,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 310px;min-height:calc(100v
 <h1>Petticoat Lane — Lunch Market</h1>
 <div class="sub">Single-road layout · 10 stalls on each side · click a stall to add a name, rating and notes</div>
 <div class="toolbar">
+<span id="syncStatus" style="font-size:12px;color:#68707c;padding:8px 4px">Connecting to shared reviews…</span>
 <button onclick="zoom(-.15)">− Zoom</button><button onclick="zoom(.15)">+ Zoom</button><button onclick="resetView()">Reset view</button>
 <select id="filter" onchange="render()"><option value="all">All stalls</option><option value="rated">Rated / named</option><option value="blank">Blank stalls</option></select>
 <button onclick="exportData()">Export notes</button><button onclick="importData()">Import notes</button>
@@ -54,25 +55,93 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 310px;min-height:calc(100v
 <div class="field"><label>WOULD RETURN?</label><select id="return"><option value="">Select</option><option>Yes</option><option>No</option><option>Maybe</option></select></div>
 <div class="actions"><button class="primary" onclick="save()">Save stall</button><button class="danger" onclick="clearStall()">Clear</button></div>
 </div>
-<div class="footer">There are exactly 20 pitches: 10 on the north side and 10 on the south side. Reviews will be shared once online storage is connected. Until then, this browser keeps a local copy. Export your notes if you want a backup.</div>
+<div class="footer">There are exactly 20 pitches: 10 on the north side and 10 on the south side. Reviews are shared online across visitors. A local copy is also kept in this browser. Export your notes if you want a backup.</div>
 </aside>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL='https://xmrymlokdhxrratewfwl.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_ndX0nd9SyMn17bnmVVWEuw_T7WSvAeL';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const stalls={};let selected=null,scale=1,ox=20,oy=20,drag=false,sx=0,sy=0;
+const blankReview={name:'',food:'',price:'',rating:0,notes:'',wouldReturn:''};
+function setSyncStatus(textValue,ok=true){const el=document.getElementById('syncStatus');if(el){el.textContent=textValue;el.style.color=ok?'#18794e':'#b42318'}}
+function normalise(d){return {name:d?.name||'',food:d?.food||'',price:d?.price||'',rating:Number(d?.rating)||0,notes:d?.notes||'',wouldReturn:d?.wouldReturn||d?.would_return||''}}
+function hasReview(d){return !!(d&&((d.name||'').trim()||(d.food||'').trim()||(d.price||'').trim()||d.rating||d.notes||d.wouldReturn))}
+
 const svg=document.getElementById('stalls'),canvas=document.getElementById('canvas'),vp=document.getElementById('viewport');
-function load(){try{Object.assign(stalls,JSON.parse(localStorage.getItem('petticoatLunch')||'{}'))}catch(e){}}
+async function load(){
+  let local={};
+  try{local=JSON.parse(localStorage.getItem('petticoatLunch')||'{}');Object.assign(stalls,local)}catch(e){}
+  try{
+    const {data,error}=await supabaseClient.from('stalls').select('*').order('id');
+    if(error)throw error;
+    const remote={};
+    (data||[]).forEach(row=>{remote[row.id]=normalise(row)});
+    const remoteHasAny=Object.values(remote).some(hasReview);
+    if(!remoteHasAny && Object.values(local).some(hasReview)){
+      const rows=[];
+      for(let i=1;i<=20;i++){const d=normalise(local[i]);rows.push({id:i,name:d.name,food:d.food,price:d.price,rating:d.rating,notes:d.notes,would_return:d.wouldReturn})}
+      const {error:upsertError}=await supabaseClient.from('stalls').upsert(rows);
+      if(upsertError)throw upsertError;
+      Object.assign(stalls,local);
+    }else{
+      for(let i=1;i<=20;i++)stalls[i]=remote[i]||{...blankReview};
+    }
+    localStorage.setItem('petticoatLunch',JSON.stringify(stalls));
+    setSyncStatus('● Shared online',true);
+  }catch(e){
+    console.error(e);
+    setSyncStatus('● Offline — local copy',false);
+  }
+}
 function addStall(id,x,y,w,h,side){const g=document.createElementNS('http://www.w3.org/2000/svg','g');g.dataset.id=id;g.innerHTML='<rect class="stall" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'"/><text class="num" x="'+(x+7)+'" y="'+(y+16)+'">#'+id+'</text><text class="stallname" x="'+(x+w/2)+'" y="'+(y+35)+'" text-anchor="middle"><tspan x="'+(x+w/2)+'" dy="0"></tspan><tspan x="'+(x+w/2)+'" dy="13"></tspan></text>';g.addEventListener('click',()=>select(id));svg.appendChild(g)}
 function makeStalls(){const w=92,h=68,gap=9,startX=25;for(let i=0;i<10;i++){addStall(i+1,startX+i*(w+gap),250,w,h,'north');addStall(i+11,startX+i*(w+gap),532,w,h,'south')}render()}
 function render(){const f=document.getElementById('filter').value;document.querySelectorAll('#stalls g').forEach(g=>{const id=g.dataset.id,d=stalls[id]||{},has=!!(d.name||d.food||d.price||d.rating||d.notes||d.wouldReturn);g.style.display=(f==='rated'&&!has)||(f==='blank'&&has)?'none':'';g.querySelector('rect').classList.toggle('rated',!!d.rating);g.querySelector('rect').classList.toggle('selected',+id===selected);const words=(d.name||'').split(/\s+/).filter(Boolean);let a='',b='';for(const word of words){if((a+' '+word).trim().length<=15)a=(a+' '+word).trim();else b=(b+' '+word).trim()}g.querySelector('.stallname').children[0].textContent=a;g.querySelector('.stallname').children[1].textContent=b})}
 function select(id){selected=id;const d=stalls[id]||{};const side=id<=10?'North side':'South side';document.getElementById('title').textContent='Stall #'+id;document.getElementById('stallhint').textContent=side+' · '+(d.name||'Add a name, rating and notes.');document.getElementById('editor').style.display='block';document.getElementById('name').value=d.name||'';document.getElementById('food').value=d.food||'';document.getElementById('price').value=d.price||'';document.getElementById('notes').value=d.notes||'';document.getElementById('return').value=d.wouldReturn||'';drawStars(d.rating||0);render();document.getElementById('name').focus()}
 function drawStars(n){const el=document.getElementById('stars');el.innerHTML='';for(let i=1;i<=5;i++){const b=document.createElement('button');b.className='star '+(i<=n?'on':'');b.textContent='★';b.onclick=()=>{stalls[selected]=stalls[selected]||{};stalls[selected].rating=i;drawStars(i)};el.appendChild(b)}}
-function save(){if(!selected)return;stalls[selected]=stalls[selected]||{};stalls[selected].name=document.getElementById('name').value.trim();stalls[selected].food=document.getElementById('food').value.trim();stalls[selected].price=document.getElementById('price').value.trim();stalls[selected].notes=document.getElementById('notes').value.trim();stalls[selected].wouldReturn=document.getElementById('return').value;localStorage.setItem('petticoatLunch',JSON.stringify(stalls));select(selected)}
-function clearStall(){if(!selected)return;delete stalls[selected];localStorage.setItem('petticoatLunch',JSON.stringify(stalls));select(selected)}
+async function save(){
+  if(!selected)return;
+  stalls[selected]=stalls[selected]||{};
+  stalls[selected].name=document.getElementById('name').value.trim();
+  stalls[selected].food=document.getElementById('food').value.trim();
+  stalls[selected].price=document.getElementById('price').value.trim();
+  stalls[selected].notes=document.getElementById('notes').value.trim();
+  stalls[selected].wouldReturn=document.getElementById('return').value;
+  const d=normalise(stalls[selected]);
+  localStorage.setItem('petticoatLunch',JSON.stringify(stalls));
+  try{
+    const {error}=await supabaseClient.from('stalls').upsert({id:Number(selected),name:d.name,food:d.food,price:d.price,rating:d.rating,notes:d.notes,would_return:d.wouldReturn,updated_at:new Date().toISOString()});
+    if(error)throw error;
+    setSyncStatus('● Saved & shared online',true);
+    select(selected);
+  }catch(e){
+    console.error(e);
+    setSyncStatus('● Saved locally — online save failed',false);
+    select(selected);
+    alert('The review was saved on this browser, but could not be saved online. Please check your connection and try again.');
+  }
+}
+async function clearStall(){
+  if(!selected)return;
+  stalls[selected]={...blankReview};
+  localStorage.setItem('petticoatLunch',JSON.stringify(stalls));
+  try{
+    const {error}=await supabaseClient.from('stalls').update({name:'',food:'',price:'',rating:0,notes:'',would_return:'',updated_at:new Date().toISOString()}).eq('id',Number(selected));
+    if(error)throw error;
+    setSyncStatus('● Cleared & shared online',true);
+  }catch(e){
+    console.error(e);
+    setSyncStatus('● Cleared locally — online clear failed',false);
+    alert('The stall was cleared on this browser, but could not be cleared online.');
+  }
+  select(selected);
+}
 function apply(){canvas.style.transform='translate('+ox+'px,'+oy+'px) scale('+scale+')'}function zoom(z){scale=Math.max(.6,Math.min(2,scale+z));apply()}function resetView(){scale=1;ox=20;oy=20;apply()}
 vp.addEventListener('mousedown',e=>{if(e.target.closest('#stalls g'))return;drag=true;sx=e.clientX-ox;sy=e.clientY-oy;vp.style.cursor='grabbing'});window.addEventListener('mousemove',e=>{if(drag){ox=e.clientX-sx;oy=e.clientY-sy;apply()}});window.addEventListener('mouseup',()=>{drag=false;vp.style.cursor='grab'});vp.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?.1:-.1)},{passive:false});
 function exportData(){const blob=new Blob([JSON.stringify(stalls,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='petticoat-lane-notes.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(){const input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.onchange=()=>{const r=new FileReader();r.onload=()=>{try{Object.assign(stalls,JSON.parse(r.result));localStorage.setItem('petticoatLunch',JSON.stringify(stalls));render();alert('Notes imported.')}catch(e){alert('Could not read that file.')}};r.readAsText(input.files[0])};input.click()}
-load();makeStalls();apply();
+load().then(()=>{makeStalls();apply()});
 </script>
 </body>
 </html>
