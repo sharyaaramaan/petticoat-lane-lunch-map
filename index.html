@@ -5,28 +5,27 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Petticoat Lane — Lunch Market Map</title>
 <style>
-:root{--bg:#f4f5f7;--panel:#fff;--ink:#17191d;--muted:#69707d;--line:#dfe3e8;--accent:#111827;--street:#c9cdd3;--stall:#fffdf7;--rated:#fff2b8}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-header{padding:22px 24px 16px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-h1{font-size:22px;margin:0 0 5px}.sub{color:var(--muted);font-size:13px}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}.toolbar button,.toolbar select{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 11px;font-size:13px;cursor:pointer}.toolbar button:hover{background:#f6f7f8}
-main{display:grid;grid-template-columns:minmax(0,1fr) 310px;height:calc(100vh - 143px);min-height:600px}
-#viewport{position:relative;overflow:hidden;background:#e9eaec;cursor:grab}.canvas{position:absolute;left:0;top:0;width:1100px;height:720px;transform-origin:0 0}
-#map{width:100%;height:100%;background:#e5e6e8}
-.street{fill:#cfd2d6}.road{fill:#bfc3c8}.label{font-size:18px;font-weight:700;fill:#777d86;letter-spacing:.5px}
-.stall{fill:var(--stall);stroke:#9da3ab;stroke-width:1.5;rx:7;cursor:pointer}.stall:hover{stroke:#111827;stroke-width:2}.stall.selected{stroke:#111827;stroke-width:3}.stall.rated{fill:var(--rated)}
-.num{font-size:11px;fill:#777d86;pointer-events:none}.stallname{font-size:12px;font-weight:700;fill:#17191d;pointer-events:none}
-.panel{background:var(--panel);border-left:1px solid var(--line);padding:20px;overflow:auto}.panel h2{font-size:18px;margin:0 0 4px}.hint{font-size:12px;color:var(--muted);margin-bottom:18px}.field{margin:13px 0}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}.field input,.field textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px;font:inherit}.field textarea{min-height:110px;resize:vertical}
-.stars{display:flex;gap:3px}.star{font-size:25px;border:0;background:none;padding:0;color:#c6c9cf;cursor:pointer}.star.on{color:#e4a400}
-.actions{display:flex;gap:8px}.primary{background:#111827!important;color:#fff;border-color:#111827!important}.danger{color:#b42318}.empty{color:var(--muted);font-size:13px;line-height:1.5}
-.footer{font-size:11px;color:var(--muted);margin-top:18px;padding-top:15px;border-top:1px solid var(--line)}
-@media(max-width:800px){main{grid-template-columns:1fr;height:auto}.panel{border-left:0;border-top:1px solid var(--line)}#viewport{height:65vh;min-height:450px}}
+:root{--bg:#f3f4f6;--panel:#fff;--ink:#17191d;--muted:#68707c;--line:#dfe3e8;--road:#d4d6da;--stall:#fffdf7;--rated:#fff0ad}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:20px 24px 15px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}h1{font-size:22px;margin:0 0 4px}.sub{font-size:13px;color:var(--muted)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.toolbar button,.toolbar select{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 11px;font-size:13px;cursor:pointer}
+main{display:grid;grid-template-columns:minmax(0,1fr) 310px;min-height:calc(100vh - 137px)}
+#viewport{position:relative;overflow:hidden;background:#eceeef;min-height:600px;cursor:grab}.canvas{position:absolute;left:0;top:0;width:1050px;height:850px;transform-origin:0 0}
+#map{width:100%;height:100%;display:block}
+.road{fill:var(--road)}.lane{fill:#e8e9eb}.roadlabel{font-size:18px;font-weight:800;fill:#747b84;letter-spacing:1px}
+.centreline{stroke:#b8bdc4;stroke-width:2;stroke-dasharray:12 10}
+.stall{fill:var(--stall);stroke:#9097a1;stroke-width:1.5;rx:7;cursor:pointer}.stall:hover{stroke:#111827;stroke-width:2}.stall.selected{stroke:#111827;stroke-width:3}.stall.rated{fill:var(--rated)}
+.num{font-size:11px;fill:#737983;pointer-events:none}.stallname{font-size:11px;font-weight:700;fill:#17191d;pointer-events:none}
+.panel{background:#fff;border-left:1px solid var(--line);padding:20px;overflow:auto}.panel h2{font-size:18px;margin:0 0 4px}.hint{font-size:12px;color:var(--muted);margin-bottom:18px}.field{margin:13px 0}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}.field input,.field textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px;font:inherit}.field textarea{min-height:110px;resize:vertical}
+.stars{display:flex;gap:3px}.star{font-size:25px;border:0;background:none;padding:0;color:#c6c9cf;cursor:pointer}.star.on{color:#e4a400}.actions{display:flex;gap:8px}.primary{background:#111827!important;color:#fff;border-color:#111827!important}.danger{color:#b42318}
+.footer{font-size:11px;color:var(--muted);margin-top:18px;padding-top:15px;border-top:1px solid var(--line);line-height:1.5}
+@media(max-width:800px){main{grid-template-columns:1fr}.panel{border-left:0;border-top:1px solid var(--line)}#viewport{min-height:520px}}
 </style>
 </head>
 <body>
 <header>
 <h1>Petticoat Lane — Lunch Market</h1>
-<div class="sub">Top-down stall planner · click a stall to add a name, rating and notes</div>
+<div class="sub">Single-road layout · 10 stalls on each side · click a stall to add a name, rating and notes</div>
 <div class="toolbar">
 <button onclick="zoom(-.15)">− Zoom</button><button onclick="zoom(.15)">+ Zoom</button><button onclick="resetView()">Reset view</button>
 <select id="filter" onchange="render()"><option value="all">All stalls</option><option value="rated">Rated / named</option><option value="blank">Blank stalls</option></select>
@@ -34,48 +33,40 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 310px;height:calc(100vh - 
 </div>
 </header>
 <main>
-<div id="viewport">
-<div class="canvas" id="canvas">
-<svg id="map" viewBox="0 0 1100 720" xmlns="http://www.w3.org/2000/svg">
-<rect width="1100" height="720" fill="#e5e6e8"/>
-<rect x="0" y="70" width="1100" height="135" class="street"/><rect x="0" y="310" width="1100" height="120" class="street"/><rect x="0" y="525" width="1100" height="120" class="street"/>
-<rect x="70" y="0" width="120" height="720" class="road"/><rect x="480" y="0" width="120" height="720" class="road"/><rect x="900" y="0" width="120" height="720" class="road"/>
-<text x="540" y="47" text-anchor="middle" class="label">GOULSTON STREET</text>
-<text x="540" y="285" text-anchor="middle" class="label">WENTWORTH STREET</text>
-<text x="540" y="500" text-anchor="middle" class="label">BELL LANE</text>
-<text x="25" y="365" class="label" transform="rotate(-90 25 365)">MARKET</text>
+<div id="viewport"><div class="canvas" id="canvas">
+<svg id="map" viewBox="0 0 1050 850" xmlns="http://www.w3.org/2000/svg">
+<rect width="1050" height="850" fill="#eceeef"/>
+<rect x="0" y="335" width="1050" height="180" class="road"/>
+<line x1="0" y1="425" x2="1050" y2="425" class="centreline"/>
+<text x="525" y="326" text-anchor="middle" class="roadlabel">PETTICOAT LANE — LUNCH MARKET</text>
+<text x="525" y="455" text-anchor="middle" class="roadlabel">ROAD</text>
 <g id="stalls"></g>
 </svg>
 </div></div>
 <aside class="panel">
-<h2 id="title">Select a stall</h2><div class="hint" id="stallhint">Choose a blank pitch on the map.</div>
+<h2 id="title">Select a stall</h2><div class="hint" id="stallhint">Choose a stall on either side of the road.</div>
 <div id="editor" style="display:none">
 <div class="field"><label>STALL / FOOD NAME</label><input id="name" maxlength="50" placeholder="e.g. Jerk chicken"></div>
 <div class="field"><label>MY RATING</label><div class="stars" id="stars"></div></div>
 <div class="field"><label>NOTES</label><textarea id="notes" placeholder="Price, portion, queue, what you ordered..."></textarea></div>
 <div class="actions"><button class="primary" onclick="save()">Save stall</button><button class="danger" onclick="clearStall()">Clear</button></div>
 </div>
-<div class="footer">Your entries are saved in this browser using local storage. This GitHub Pages version does not share/synchronise notes between different people. Export your notes if you want to move them to another device.</div>
+<div class="footer">There are exactly 20 pitches: 10 on the north side and 10 on the south side. Your entries are saved in this browser. They are not shared with other people or devices. Export your notes if you want a backup.</div>
 </aside>
 </main>
 <script>
 const stalls={};let selected=null,scale=1,ox=20,oy=20,drag=false,sx=0,sy=0;
-const svg=document.getElementById('stalls'), canvas=document.getElementById('canvas'), vp=document.getElementById('viewport');
+const svg=document.getElementById('stalls'),canvas=document.getElementById('canvas'),vp=document.getElementById('viewport');
 function load(){try{Object.assign(stalls,JSON.parse(localStorage.getItem('petticoatLunch')||'{}'))}catch(e){}}
-function makeStalls(){let id=1;const rows=[{y:88,x:215,count:5},{y:155,x:215,count:5},{y:328,x:215,count:5},{y:395,x:215,count:5},{y:543,x:215,count:5},{y:610,x:215,count:5}];rows.forEach(r=>{for(let i=0;i<r.count;i++){addStall(id++,r.x+i*125,r.y,108,50)}});const rows2=[{y:88,x:625,count:2},{y:155,x:625,count:2},{y:328,x:625,count:2},{y:395,x:625,count:2},{y:543,x:625,count:2},{y:610,x:625,count:2}];rows2.forEach(r=>{for(let i=0;i<r.count;i++)addStall(id++,r.x+i*125,r.y,108,50)});render()}
-function addStall(id,x,y,w,h){const g=document.createElementNS('http://www.w3.org/2000/svg','g');g.dataset.id=id;g.innerHTML='<rect class="stall" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'"/><text class="num" x="'+(x+7)+'" y="'+(y+16)+'">#'+id+'</text><text class="stallname" x="'+(x+w/2)+'" y="'+(y+36)+'" text-anchor="middle"></text>';g.addEventListener('click',()=>select(id));svg.appendChild(g)}
+function addStall(id,x,y,w,h,side){const g=document.createElementNS('http://www.w3.org/2000/svg','g');g.dataset.id=id;g.innerHTML='<rect class="stall" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'"/><text class="num" x="'+(x+7)+'" y="'+(y+16)+'">#'+id+'</text><text class="stallname" x="'+(x+w/2)+'" y="'+(y+36)+'" text-anchor="middle"></text>';g.addEventListener('click',()=>select(id));svg.appendChild(g)}
+function makeStalls(){const w=92,h=68,gap=9,startX=25;for(let i=0;i<10;i++){addStall(i+1,startX+i*(w+gap),250,w,h,'north');addStall(i+11,startX+i*(w+gap),532,w,h,'south')}render()}
 function render(){const f=document.getElementById('filter').value;document.querySelectorAll('#stalls g').forEach(g=>{const id=g.dataset.id,d=stalls[id]||{},has=!!(d.name||d.rating||d.notes);g.style.display=(f==='rated'&&!has)||(f==='blank'&&has)?'none':'';g.querySelector('rect').classList.toggle('rated',!!d.rating);g.querySelector('rect').classList.toggle('selected',+id===selected);g.querySelector('.stallname').textContent=d.name||''})}
-function select(id){selected=id;const d=stalls[id]||{};document.getElementById('title').textContent='Stall #'+id;document.getElementById('stallhint').textContent=d.name||'Add a name, rating and notes.';document.getElementById('editor').style.display='block';document.getElementById('name').value=d.name||'';document.getElementById('notes').value=d.notes||'';drawStars(d.rating||0);render();document.getElementById('name').focus()}
+function select(id){selected=id;const d=stalls[id]||{};const side=id<=10?'North side':'South side';document.getElementById('title').textContent='Stall #'+id;document.getElementById('stallhint').textContent=side+' · '+(d.name||'Add a name, rating and notes.');document.getElementById('editor').style.display='block';document.getElementById('name').value=d.name||'';document.getElementById('notes').value=d.notes||'';drawStars(d.rating||0);render();document.getElementById('name').focus()}
 function drawStars(n){const el=document.getElementById('stars');el.innerHTML='';for(let i=1;i<=5;i++){const b=document.createElement('button');b.className='star '+(i<=n?'on':'');b.textContent='★';b.onclick=()=>{stalls[selected]=stalls[selected]||{};stalls[selected].rating=i;drawStars(i)};el.appendChild(b)}}
 function save(){if(!selected)return;stalls[selected]=stalls[selected]||{};stalls[selected].name=document.getElementById('name').value.trim();stalls[selected].notes=document.getElementById('notes').value.trim();localStorage.setItem('petticoatLunch',JSON.stringify(stalls));select(selected)}
 function clearStall(){if(!selected)return;delete stalls[selected];localStorage.setItem('petticoatLunch',JSON.stringify(stalls));select(selected)}
-function apply(){canvas.style.transform='translate('+ox+'px,'+oy+'px) scale('+scale+')'}
-function zoom(z){scale=Math.max(.55,Math.min(2,scale+z));apply()}
-function resetView(){scale=1;ox=20;oy=20;apply()}
-vp.addEventListener('mousedown',e=>{if(e.target.closest('#stalls g'))return;drag=true;sx=e.clientX-ox;sy=e.clientY-oy;vp.style.cursor='grabbing'});
-window.addEventListener('mousemove',e=>{if(drag){ox=e.clientX-sx;oy=e.clientY-sy;apply()}});
-window.addEventListener('mouseup',()=>{drag=false;vp.style.cursor='grab'});
-vp.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?.1:-.1)},{passive:false});
+function apply(){canvas.style.transform='translate('+ox+'px,'+oy+'px) scale('+scale+')'}function zoom(z){scale=Math.max(.6,Math.min(2,scale+z));apply()}function resetView(){scale=1;ox=20;oy=20;apply()}
+vp.addEventListener('mousedown',e=>{if(e.target.closest('#stalls g'))return;drag=true;sx=e.clientX-ox;sy=e.clientY-oy;vp.style.cursor='grabbing'});window.addEventListener('mousemove',e=>{if(drag){ox=e.clientX-sx;oy=e.clientY-sy;apply()}});window.addEventListener('mouseup',()=>{drag=false;vp.style.cursor='grab'});vp.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?.1:-.1)},{passive:false});
 function exportData(){const blob=new Blob([JSON.stringify(stalls,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='petticoat-lane-notes.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(){const input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.onchange=()=>{const r=new FileReader();r.onload=()=>{try{Object.assign(stalls,JSON.parse(r.result));localStorage.setItem('petticoatLunch',JSON.stringify(stalls));render();alert('Notes imported.')}catch(e){alert('Could not read that file.')}};r.readAsText(input.files[0])};input.click()}
 load();makeStalls();apply();
